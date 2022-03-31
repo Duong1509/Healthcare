@@ -1,0 +1,19 @@
+{
+    "Bac_si": "Loan",
+    "Chandoan": "Ung_thu_tuyen_giap, Men_gan_tang",
+    "Dieutri": "Uong_thuoc_theo_yeu_cau",
+    "Medicine":[{
+        "name": "Decolgen",
+        "amount":"ngay 3 lan"
+    },
+    {
+        "name": "Panadol",
+        "amount":"ngay 3 lan"
+    },
+    {
+        "name": "Novoluna",
+        "amount":"ngay 2 lan"
+    }],
+    "Thoi_gian":"29-01-022",
+    "Ghi_chu": "da sua lai benh an ngay 26-01-2022"
+}

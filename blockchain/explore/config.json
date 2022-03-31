@@ -1,0 +1,10 @@
+{
+	"network-configs": {
+		"test-network": {
+			"name": "blockchain",
+			"profile": "./network.json",
+			"enableAuthentication": false
+		}
+	},
+	"license": "Apache-2.0"
+}

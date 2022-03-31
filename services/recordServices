@@ -1,0 +1,231 @@
+const { BlockDecoder } = require('fabric-common');
+const { Gateway, Wallets, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, DefaultCheckpointers } = require('fabric-network');
+
+const fabprotos = require("fabric-protos");
+const fs = require('fs');
+const path = require('path');
+const decode = require('./decode/decode')
+const crypto = require("crypto");
+const { json } = require('body-parser');
+const { callbackify } = require('util');
+
+async function Invokecc(fcn, params, user) {
+    var gateway = new Gateway()
+    try {
+        const ccpPath = path.resolve(process.cwd(), "blockchain", "organizations", 'peerOrganizations', 'issuer.com', 'connection-issuer.json');
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'));
+
+        const walletPath = path.join(process.cwd(), 'blockchain', 'wallets');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+
+        const identity = await wallet.get(user);
+        // console.log(user)
+        // var temp =crypto.createPublicKey(identity.credentials.certificate).export({type:'spki', format:'pem'})
+        // console.log(temp)
+
+        if (!identity) {
+            return {
+                success: false,
+                result: "Identity user does not exist in system"
+            }
+        }
+        const gatewayOptions = {
+            wallet,
+            identity: user,
+            discovery: {
+                enabled: true,
+                asLocalhost: true
+            },
+            eventHandlerOptions: {
+                strategy: DefaultEventHandlerStrategies.NONE
+            }
+        }
+        await gateway.connect(ccp, gatewayOptions);
+        const network = await gateway.getNetwork('blockchain');
+        const contract = await network.getContract('blockchain-cc');
+        if (fcn == "CreateMB") {
+            await contract.submitTransaction(fcn, params.CCCD, params.information)
+        }
+        if (fcn == "GrantPermission") {
+            await contract.submitTransaction(fcn, params.CCCD, params.readPermission, params.writePermission)
+        }
+        if (fcn == "CreateRecord") {
+
+            await contract.submitTransaction(fcn, params.CCCD, params.sickType, params.data, params.medicine)
+        }
+        if (fcn == "GenerateRecord") {
+            await contract.submitTransaction(fcn, params.CCCD)
+        }
+        if (fcn == "UpdateRecord") {
+            await contract.submitTransaction(fcn, params.CCCD, params.sickType, params.data, params.time, params.medicine)
+        }
+        if (fcn == "DeleteRecord") {
+            await contract.submitTransaction(fcn, params.CCCD, params.sickType, params.time)
+        }
+        if (fcn == "DeletePermission") {
+            await contract.submitTransaction(fcn, params.CCCD, params.readPermission, params.writePermission)
+        }
+
+        return {
+            success: true,
+            result: params
+        }
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            success: false,
+            result: err
+        }
+    } finally {
+        await gateway.disconnect()
+    }
+}
+
+
+async function Querycc(fcn, params, user) {
+    var gateway = new Gateway()
+    try {
+        const ccpPath = path.resolve(process.cwd(), "blockchain", "organizations", 'peerOrganizations', 'issuer.com', 'connection-issuer.json');
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'));
+
+        const walletPath = path.join(process.cwd(), 'blockchain', 'wallets');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+
+        const identity = await wallet.get(user);
+        // console.log(user)
+        // var temp =crypto.createPublicKey(identity.credentials.certificate).export({type:'spki', format:'pem'})
+        // console.log(temp)
+
+        if (!identity) {
+            return {
+                success: false,
+                result: "Identity user does not exist in system"
+            }
+        }
+        const gatewayOptions = {
+            wallet,
+            identity: user,
+            discovery: {
+                enabled: true,
+                asLocalhost: true
+            },
+            queryHandlerOptions: {
+                timeout: 60,
+                strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN
+
+            }
+        }
+        await gateway.connect(ccp, gatewayOptions);
+        const network = await gateway.getNetwork('blockchain');
+        const contract = await network.getContract('blockchain-cc');
+        if (fcn == "ReadMultiResult") {
+            let result = await contract.evaluateTransaction(fcn, params.CCCD, params.sickType)
+            if (result.toString() === "" || result.toString() === "[]") {
+                return {
+                    success: false,
+                    result: JSON.parse("{\"Error\":\"Bản ghi không tồn tại\"}")
+                }
+            }
+            let value = JSON.parse(result.toString()).map(value => {
+                return {
+                    Time: value.Value.Time,
+                    Data: JSON.parse(value.Value.Data)
+                }
+            })
+            value.sort((a, b) => a.Time < b.Time ? 1 : -1)
+
+
+            return {
+                success: true,
+                result: value
+            }
+        }
+
+        if (fcn == "ReadRecord") {
+            let result = await contract.evaluateTransaction("ReadMultiResult", params.CCCD, params.sickType)
+            if (result.toString() === "" || result.toString() === "[]") {
+                return {
+                    success: false,
+                    result: JSON.parse("{\"Error\":\"Bản ghi không tồn tại\"}")
+                }
+            }
+            let value = JSON.parse(result.toString()).map(value => {
+                return {
+                    Time: value.Value.Time,
+                    Data: JSON.parse(value.Value.Data)
+
+
+                }
+
+
+
+            })
+            value.sort((a, b) => a.Time < b.Time ? 1 : -1)
+
+
+            return {
+                success: true,
+                result: value.slice(0, params.count)
+            }
+        }
+
+        if (fcn == "ReadAll") {
+            let result = await contract.evaluateTransaction("ReadAll", params.CCCD, params.hashKey)
+            if (result.toString() === "" || result.toString() === "[]") {
+                return {
+                    success: false,
+                    result: JSON.parse("{\"Error\":\"Bản ghi không tồn tại\"}")
+                }
+            }
+            let value = JSON.parse(result.toString()).map(value => {
+                return value.Value
+            })
+
+
+            return {
+                success: true,
+                result: value
+            }
+        }
+        if (fcn == "ReadMedicine") {
+            let result = await contract.evaluateTransaction("ReadMedicine", params.CCCD)
+            if (result.toString() === "" || result.toString() === "[]") {
+                return {
+                    success: false,
+                    result: JSON.parse("{\"Error\":\"Bản ghi không tồn tại\"}")
+                }
+            }
+            let value = JSON.parse(result.toString())
+                .map(value => {
+                    return {
+                        CCCD: value.Value.CCCD,
+                        Medicine: JSON.parse(value.Value.Data),
+                        Timestamp: value.Timestamp
+                    }
+                })
+
+
+            return {
+                success: true,
+                result: value
+            }
+        }
+
+
+
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            success: false,
+            result: err
+        }
+    } finally {
+        await gateway.disconnect()
+    }
+}
+
+
+exports.Invokecc = Invokecc
+exports.Querycc = Querycc

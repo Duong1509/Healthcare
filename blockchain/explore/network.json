@@ -1,0 +1,76 @@
+{
+	"name": "blockchain",
+	"version": "1.0.0",
+	"client": {
+		"tlsEnable": true,
+		"adminCredential": {
+			"id": "exploreradmin",
+			"password": "exploreradminpw",
+			"affiliation": "issuer.department"
+		},
+		"organization": "issuer",
+		"connection": {	
+			"timeout": {
+				"peer": {
+					"endorser": "300"
+				},
+				"orderer": "300"
+			}
+		}
+	},
+	"channels": {
+		"blockchain": {
+			"peers": {
+				"peer0.issuer.com": {},
+				"peer1.issuer.com": {}
+			},
+			"connection": {
+				"timeout": {
+					"peer": {
+						"endorser": "6000",
+						"eventHub": "6000",
+						"eventReg": "6000"
+					}
+				}
+			}
+		}
+	},
+	"organizations": {
+		"issuer": {
+			"mspid": "issuer",
+			"adminPrivateKey": {
+				"pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgc+kp1eLzaHG9R3Wx\n84h91wnGKTAQBhv1lXpxHcabn7ChRANCAARv6trlAMm6ce/peQfnf8k8H1m2/aW7\nbBNf2dXIqUuaCVU8EaGaMbEU3pDuNX1I3Zr49BjLBEreJQ8aRL8slzSL\n-----END PRIVATE KEY-----\n"
+			},
+			"peers": ["peer0.issuer.com","peer1.issuer.com"],
+			"signedCert": {
+				"path": "/tmp/crypto/peerOrganizations/issuer.com/users/Admin@issuer.com/msp/signcerts/cert.pem"
+			}
+		}
+	},
+	"peers": {
+		"peer0.issuer.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/issuer.com/peers/peer0.issuer.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer0.issuer.com:7051"
+		},
+		"peer1.issuer.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/issuer.com/peers/peer1.issuer.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer1.issuer.com:8051"
+		}
+	},
+	"certificateAuthorities": {
+		"ca-issuer": {
+			"url": "https://ca_issuer:7054",
+			"httpOptions": {
+				"verify": false
+			},
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/issuer.com/ca/ca.issuer.com-cert.pem"
+			},
+			"caName": "ca-issuer"
+		}
+	}
+}

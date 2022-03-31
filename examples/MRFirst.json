@@ -1,0 +1,19 @@
+{
+    "Bac_si": "Loan",
+    "Chandoan": "Ung_thu_tuyen_giap, Men_gan_tang",
+    "Dieutri": "Mo_phau_thuat",
+    "Medicine":[{
+        "name": "Decolgen",
+        "amount":"ngay 2 lan"
+    },
+    {
+        "name": "Panadol",
+        "amount":"ngay 2 lan"
+    },
+    {
+        "name": "Novolinda",
+        "amount":"ngay 2 lan"
+    }],
+    "Thoi_gian":"26-01-2022",
+    "Ghi_chu": ""
+}

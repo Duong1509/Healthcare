@@ -1,0 +1,10 @@
+{
+    "index": {
+        "fields": [
+            "Time"
+        ]
+    },
+    "ddoc": "index2MB",
+    "name": "indexTime",
+    "type": "json"
+}
